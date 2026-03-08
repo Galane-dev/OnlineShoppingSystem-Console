@@ -34,10 +34,11 @@ public class AuthService : IAuthService
     // ── Registration ───────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Registers a new customer. Validates username uniqueness and password strength
-    /// before persisting.
+    /// Registers a new customer. Validates username uniqueness and password strength,
+    /// then stores the security question and a hash of the (normalised) answer.
     /// </summary>
-    public Customer RegisterCustomer(string username, string email, string password, string fullName)
+    public Customer RegisterCustomer(string username, string email, string password, string fullName,
+                                     string securityQuestion, string securityAnswer)
     {
         if (UsernameExists(username))
             throw new InvalidOperationException($"Username '{username}' is already taken.");
@@ -46,13 +47,21 @@ public class AuthService : IAuthService
         if (strengthError != null)
             throw new InvalidOperationException(strengthError);
 
+        if (string.IsNullOrWhiteSpace(securityQuestion))
+            throw new ArgumentException("A security question is required.");
+
+        if (string.IsNullOrWhiteSpace(securityAnswer))
+            throw new ArgumentException("A security answer is required.");
+
         var customer = new Customer
         {
-            Id           = _store.NextUserId(),
-            Username     = username,
-            Email        = email,
+            Id = _store.NextUserId(),
+            Username = username,
+            Email = email,
             PasswordHash = PasswordHelper.Hash(password),
-            FullName     = fullName,
+            FullName = fullName,
+            SecurityQuestion = securityQuestion.Trim(),
+            SecurityAnswerHash = HashSecurityAnswer(securityAnswer),
             WalletBalance = 0
         };
 
@@ -64,6 +73,11 @@ public class AuthService : IAuthService
 
     public bool UsernameExists(string username) =>
         _store.Users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Returns the User with the given username, or null if not found.</summary>
+    public User? FindByUsername(string username) =>
+        _store.Users.FirstOrDefault(u =>
+            u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 
     // ── Account management ─────────────────────────────────────────────────────
 
@@ -93,5 +107,35 @@ public class AuthService : IAuthService
         user.PasswordHash = PasswordHelper.Hash(newPassword);
         _store.Save();
     }
+
+    /// <summary>
+    /// Resets the password for the given username after verifying the security answer.
+    /// The answer comparison is case-insensitive and whitespace-trimmed.
+    /// </summary>
+    public void ResetPassword(string username, string securityAnswer, string newPassword)
+    {
+        var user = _store.Users.FirstOrDefault(u =>
+            u.Username.Equals(username, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException("No account found with that username.");
+
+        if (HashSecurityAnswer(securityAnswer) != user.SecurityAnswerHash)
+            throw new InvalidOperationException("Security answer is incorrect.");
+
+        var strengthError = PasswordHelper.GetStrengthError(newPassword);
+        if (strengthError != null)
+            throw new InvalidOperationException(strengthError);
+
+        user.PasswordHash = PasswordHelper.Hash(newPassword);
+        _store.Save();
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Normalises the answer (trim + lowercase) then hashes it, so comparisons
+    /// are case-insensitive regardless of how the user typed the answer.
+    /// </summary>
+    private static string HashSecurityAnswer(string answer) =>
+        PasswordHelper.Hash(answer.Trim().ToLowerInvariant());
 }
 

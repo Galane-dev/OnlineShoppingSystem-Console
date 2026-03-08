@@ -2,7 +2,7 @@
 
 ## How to Run
 
-**Prerequisites:** .NET 10 SDK — https://dotnet.microsoft.com/download
+**Prerequisites:** .NET 8 SDK — https://dotnet.microsoft.com/download
 
 ```bash
 cd OnlineShoppingSystem

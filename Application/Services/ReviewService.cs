@@ -26,14 +26,14 @@ public class ReviewService
         var product = _store.Products.FirstOrDefault(p => p.Id == productId && p.IsActive)
             ?? throw new InvalidOperationException("Product not found.");
 
-        // Guard: customer must have purchased this product
-        var hasPurchased = customer.OrderHistory
-            .Any(o => o.Status != OrderStatus.Cancelled &&
+        // Guard: customer must have a *delivered* order containing this product
+        var hasDeliveredOrder = customer.OrderHistory
+            .Any(o => o.Status == OrderStatus.Delivered &&
                       o.Items.Any(i => i.ProductId == productId));
 
-        if (!hasPurchased)
+        if (!hasDeliveredOrder)
             throw new InvalidOperationException(
-                "You can only review products you have purchased.");
+                "You can only review a product once your order has been delivered.");
 
         // Guard: prevent duplicate reviews for the same product
         var alreadyReviewed = product.Reviews

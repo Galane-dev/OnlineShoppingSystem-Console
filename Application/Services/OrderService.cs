@@ -73,6 +73,52 @@ public class OrderService : IOrderService
         _store.Save();
     }
 
+    /// <summary>
+    /// Cancels an order that is still Pending or Processing.
+    /// Refunds the full order amount to the customer's wallet.
+    /// Shipped or Delivered orders must use ReturnOrder instead.
+    /// </summary>
+    public void CancelOrder(Customer customer, int orderId)
+    {
+        var order = GetCustomerOrder(customer, orderId);
+
+        if (order.Status == OrderStatus.Shipped || order.Status == OrderStatus.Delivered)
+            throw new InvalidOperationException(
+                $"Order #{orderId} has already been {order.Status.ToString().ToLower()} and cannot be cancelled. Use 'Return Order' instead.");
+
+        if (order.Status == OrderStatus.Cancelled)
+            throw new InvalidOperationException($"Order #{orderId} is already cancelled.");
+
+        order.Status      = OrderStatus.Cancelled;
+        order.CancelledAt = DateTime.Now;
+        order.LastUpdated = DateTime.Now;
+
+        customer.WalletBalance += order.TotalAmount;
+        _store.Save();
+    }
+
+    /// <summary>
+    /// Returns a Delivered order, restocking all items and refunding the customer's wallet.
+    /// Only Delivered orders are eligible for return.
+    /// </summary>
+    public void ReturnOrder(Customer customer, int orderId)
+    {
+        var order = GetCustomerOrder(customer, orderId);
+
+        if (order.Status != OrderStatus.Delivered)
+            throw new InvalidOperationException(
+                $"Only delivered orders can be returned. Order #{orderId} is currently {order.Status.ToString().ToLower()}.");
+
+        RestockOrderItems(order);
+
+        order.Status      = OrderStatus.Cancelled;
+        order.CancelledAt = DateTime.Now;
+        order.LastUpdated = DateTime.Now;
+
+        customer.WalletBalance += order.TotalAmount;
+        _store.Save();
+    }
+
     // ── Private Helpers ────────────────────────────────────────────────────────
 
     /// <summary>Ensures every cart item has sufficient stock before committing the order.</summary>
@@ -123,6 +169,26 @@ public class OrderService : IOrderService
         {
             var product = _store.Products.First(p => p.Id == item.ProductId);
             product.StockQuantity -= item.Quantity;
+        }
+    }
+
+    /// <summary>Finds an order that belongs to the given customer, throwing if not found.</summary>
+    private Order GetCustomerOrder(Customer customer, int orderId)
+    {
+        var order = _store.Orders.FirstOrDefault(o => o.Id == orderId && o.CustomerId == customer.Id)
+            ?? throw new InvalidOperationException($"Order #{orderId} was not found in your order history.");
+
+        return order;
+    }
+
+    /// <summary>Returns each order item's quantity back to the product's stock.</summary>
+    private void RestockOrderItems(Order order)
+    {
+        foreach (var item in order.Items)
+        {
+            var product = _store.Products.FirstOrDefault(p => p.Id == item.ProductId);
+            if (product != null)
+                product.StockQuantity += item.Quantity;
         }
     }
 }
