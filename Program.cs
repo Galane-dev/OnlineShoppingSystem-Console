@@ -19,7 +19,7 @@ var cartService    = new CartService(store);
 var reviewService  = new ReviewService(store);
 var reportService  = new ReportService(store);
 
-var customerMenu = new CustomerMenu(productService, cartService, orderService, paymentService, reviewService);
+var customerMenu = new CustomerMenu(productService, cartService, orderService, paymentService, reviewService, authService);
 var adminMenu    = new AdminMenu(productService, orderService, reportService);
 var mainMenu     = new MainMenu(authService, customerMenu, adminMenu);
 

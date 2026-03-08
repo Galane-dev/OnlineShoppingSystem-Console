@@ -65,7 +65,22 @@ public class MainMenu
 
             var fullName = ConsoleHelper.ReadRequiredInput("Full Name");
             var email    = ConsoleHelper.ReadRequiredInput("Email");
-            var password = ConsoleHelper.ReadRequiredInput("Password");
+
+            Console.WriteLine();
+            ConsoleHelper.WriteInfo("Password requirements: 6+ characters, uppercase, lowercase, number, symbol.");
+            Console.WriteLine();
+
+            // Loop until the user enters a password that passes strength validation
+            string password;
+            while (true)
+            {
+                password = ConsoleHelper.ReadPassword("Password");
+
+                var error = OnlineShoppingSystem.Application.Helpers.PasswordHelper.GetStrengthError(password);
+                if (error == null) break;
+
+                ConsoleHelper.WriteWarning(error);
+            }
 
             var customer = _authService.RegisterCustomer(username, email, password, fullName);
             Console.WriteLine();
@@ -86,7 +101,7 @@ public class MainMenu
         ConsoleHelper.WriteHeader("Login");
 
         var username = ConsoleHelper.ReadRequiredInput("Username");
-        var password = ConsoleHelper.ReadRequiredInput("Password");
+        var password = ConsoleHelper.ReadPassword("Password");
 
         var user = _authService.Login(username, password);
 
@@ -114,8 +129,8 @@ public class MainMenu
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine(@"
   ╔═══════════════════════════════════════════════════════╗
-  ║          ONLINE SHOPPING SYSTEM  v1.0                 ║
-  ║              Backend Console Application              ║
+  ║                   UniHub Console                      ║
+  ║               Student Friendly Prices                 ║
   ╚═══════════════════════════════════════════════════════╝");
         Console.ResetColor();
     }

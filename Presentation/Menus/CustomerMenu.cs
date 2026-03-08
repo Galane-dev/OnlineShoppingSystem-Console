@@ -15,19 +15,22 @@ public class CustomerMenu
     private readonly OrderService   _orderService;
     private readonly PaymentService _paymentService;
     private readonly ReviewService  _reviewService;
+    private readonly AuthService    _authService;
 
     public CustomerMenu(
         ProductService productService,
         CartService    cartService,
         OrderService   orderService,
         PaymentService paymentService,
-        ReviewService  reviewService)
+        ReviewService  reviewService,
+        AuthService    authService)
     {
         _productService = productService;
         _cartService    = cartService;
         _orderService   = orderService;
         _paymentService = paymentService;
         _reviewService  = reviewService;
+        _authService    = authService;
     }
 
     public void Run(Customer customer)
@@ -52,10 +55,11 @@ public class CustomerMenu
             ConsoleHelper.WriteMenuOption(8,  "Order History",    "View all past orders");
             ConsoleHelper.WriteMenuOption(9,  "Track Order",      "Check the status of an order");
             ConsoleHelper.WriteMenuOption(10, "Write a Review",   "Review a product you purchased");
+            ConsoleHelper.WriteMenuOption(11, "My Account",       "Edit name or change your password");
             ConsoleHelper.WriteMenuOption(0,  "Logout");
             Console.WriteLine();
 
-            var choice = ConsoleHelper.ReadInt("Select option", 0, 10);
+            var choice = ConsoleHelper.ReadInt("Select option", 0, 11);
 
             switch (choice)
             {
@@ -69,6 +73,7 @@ public class CustomerMenu
                 case 8:  ViewOrderHistory(customer); break;
                 case 9:  TrackOrder(customer);       break;
                 case 10: ReviewProduct(customer);    break;
+                case 11: MyAccount(customer);        break;
                 case 0:
                     ConsoleHelper.WriteInfo("You have been logged out.");
                     ConsoleHelper.PressEnterToContinue();
@@ -504,6 +509,100 @@ public class CustomerMenu
 
             _reviewService.SubmitReview(customer, productId, rating, comment);
             ConsoleHelper.WriteSuccess("Review submitted — thank you for your feedback!");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    // ── My Account ────────────────────────────────────────────────────────────
+
+    /// <summary>Account settings sub-menu: edit name or change password.</summary>
+    private void MyAccount(Customer customer)
+    {
+        Console.Clear();
+        ConsoleHelper.WriteHeader("My Account");
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"  Username  : {customer.Username}");
+        ConsoleHelper.WriteInfo($"  Full Name : {customer.FullName}");
+        ConsoleHelper.WriteInfo($"  Email     : {customer.Email}");
+        Console.WriteLine();
+
+        ConsoleHelper.WriteMenuOption(1, "Edit Full Name",    "Update your display name");
+        ConsoleHelper.WriteMenuOption(2, "Change Password",   "Update your password securely");
+        ConsoleHelper.WriteMenuOption(0, "Back");
+        Console.WriteLine();
+
+        var choice = ConsoleHelper.ReadInt("Select option", 0, 2);
+
+        switch (choice)
+        {
+            case 1: EditFullName(customer);    break;
+            case 2: ChangePassword(customer);  break;
+        }
+    }
+
+    private void EditFullName(Customer customer)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"Current name: {customer.FullName}");
+        var newName = ConsoleHelper.ReadRequiredInput("New full name");
+
+        try
+        {
+            _authService.UpdateFullName(customer, newName);
+            ConsoleHelper.WriteSuccess($"Name updated to '{customer.FullName}'.");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    private void ChangePassword(Customer customer)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo("Password requirements: 6+ characters, uppercase, lowercase, number, symbol.");
+        Console.WriteLine();
+
+        var current = ConsoleHelper.ReadPassword("Current password");
+
+        // Verify current password before revealing the new-password prompt
+        if (!Application.Helpers.PasswordHelper.Verify(current, customer.PasswordHash))
+        {
+            ConsoleHelper.WriteError("Current password is incorrect.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        // Loop until a strong new password is entered
+        string newPassword;
+        while (true)
+        {
+            newPassword = ConsoleHelper.ReadPassword("New password");
+            var error = Application.Helpers.PasswordHelper.GetStrengthError(newPassword);
+            if (error == null) break;
+            ConsoleHelper.WriteWarning(error);
+        }
+
+        var confirm = ConsoleHelper.ReadPassword("Confirm new password");
+
+        if (newPassword != confirm)
+        {
+            ConsoleHelper.WriteError("Passwords do not match. No changes were saved.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        try
+        {
+            _authService.ChangePassword(customer, current, newPassword);
+            ConsoleHelper.WriteSuccess("Password changed successfully.");
         }
         catch (Exception ex)
         {

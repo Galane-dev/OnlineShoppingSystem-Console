@@ -25,9 +25,4 @@
     <None Include=".vs\slnx.sqlite" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="{Domain\Models,Domain\Interfaces,Application\Services,Application\Helpers,Infrastructure\Data,Presentation\Menus,Presentation\Helpers}\" />
-    <Folder Include="{Domain\{Entities,Enums,Interfaces},Services,Repositories,Helpers,UI}\" />
-  </ItemGroup>
-
 </Project>

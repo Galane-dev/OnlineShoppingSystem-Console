@@ -44,12 +44,21 @@ public interface IPaymentService
     List<Payment> GetPaymentHistory(int customerId);
 }
 
-/// <summary>Defines user authentication and registration operations.</summary>
+/// <summary>Defines user authentication, registration, and account management operations.</summary>
 public interface IAuthService
 {
     User? Login(string username, string password);
     Customer RegisterCustomer(string username, string email, string password, string fullName);
     bool UsernameExists(string username);
+
+    /// <summary>Updates the user's display name.</summary>
+    void UpdateFullName(User user, string newFullName);
+
+    /// <summary>
+    /// Changes the user's password after verifying the current one.
+    /// Throws if currentPassword does not match or newPassword fails strength rules.
+    /// </summary>
+    void ChangePassword(User user, string currentPassword, string newPassword);
 }
 
 /// <summary>Defines reporting and analytics operations for administrators.</summary>
