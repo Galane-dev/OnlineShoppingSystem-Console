@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 8)
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── SDK setup ─────────────────────────────────────────────────────────────
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # ── Restore ───────────────────────────────────────────────────────────────
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # ── Build ─────────────────────────────────────────────────────────────────
+      - name: Build (Release)
+        run: dotnet build --no-restore --configuration Release
+
+      # ── Test ──────────────────────────────────────────────────────────────────
+      - name: Run unit tests
+        run: |
+          dotnet test --no-build --configuration Release \
+            --logger "console;verbosity=normal" \
+            --results-directory ./TestResults
+
+      # ── Upload test results (always, so failures are still visible) ───────────
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+          retention-days: 7
