@@ -1,0 +1,14 @@
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\bin\Debug\net10.0\OnlineShoppingSystem.exe
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\bin\Debug\net10.0\OnlineShoppingSystem.deps.json
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\bin\Debug\net10.0\OnlineShoppingSystem.runtimeconfig.json
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\bin\Debug\net10.0\OnlineShoppingSystem.dll
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\bin\Debug\net10.0\OnlineShoppingSystem.pdb
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.AssemblyInfoInputs.cache
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.AssemblyInfo.cs
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.csproj.CoreCompileInputs.cache
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.dll
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\refint\OnlineShoppingSystem.dll
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.pdb
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\OnlineShoppingSystem.genruntimeconfig.cache
+C:\Users\Welcome\Downloads\OnlineShoppingSystem (7)\OSS_release\OnlineShoppingSystem\obj\Debug\net10.0\ref\OnlineShoppingSystem.dll

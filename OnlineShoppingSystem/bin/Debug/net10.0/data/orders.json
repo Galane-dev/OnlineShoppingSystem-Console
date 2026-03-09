@@ -1,0 +1,21 @@
+[
+  {
+    "Id": 1,
+    "CustomerId": 5,
+    "CustomerName": "Kenna moreki",
+    "Items": [
+      {
+        "ProductId": 5,
+        "ProductName": "Yoga Mat",
+        "UnitPrice": 299.99,
+        "Quantity": 2,
+        "LineTotal": 599.98
+      }
+    ],
+    "Status": 4,
+    "TotalAmount": 599.98,
+    "PlacedAt": "2026-03-09T14:35:05.1293431+02:00",
+    "LastUpdated": "2026-03-09T14:42:39.2056143+02:00",
+    "CancelledAt": "2026-03-09T14:42:39.2056118+02:00"
+  }
+]

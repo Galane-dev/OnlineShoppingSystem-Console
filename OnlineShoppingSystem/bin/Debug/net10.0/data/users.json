@@ -1,0 +1,134 @@
+[
+  {
+    "$type": "Administrator",
+    "Role": "Administrator",
+    "Department": "Operations",
+    "IsApproved": true,
+    "Id": 1,
+    "Username": "admin",
+    "Email": "admin@shop.com",
+    "PasswordHash": "8e2d10dfe0a80298037feefcdcc88046b0686bb2fe50286da0cd7047d6a05e1c",
+    "FullName": "System Administrator",
+    "RegisteredAt": "2026-03-09T14:04:42.7289395\u002B02:00",
+    "SecurityQuestion": "",
+    "SecurityAnswerHash": ""
+  },
+  {
+    "$type": "Customer",
+    "Role": "Customer",
+    "WalletBalance": 500,
+    "Cart": {
+      "CustomerId": 2,
+      "Items": [],
+      "LastUpdated": "2026-03-09T14:04:42.7461642\u002B02:00",
+      "Total": 0,
+      "ItemCount": 0,
+      "IsEmpty": true
+    },
+    "OrderHistory": [],
+    "Reviews": [],
+    "Wishlist": [],
+    "Id": 2,
+    "Username": "john_doe",
+    "Email": "john@email.com",
+    "PasswordHash": "edf631e567d644446a6b3a47d3c50a579dc6f536496a960f9bc693566bb47727",
+    "FullName": "John Doe",
+    "RegisteredAt": "2026-03-09T14:04:42.7457578\u002B02:00",
+    "SecurityQuestion": "",
+    "SecurityAnswerHash": ""
+  },
+  {
+    "$type": "Customer",
+    "Role": "Customer",
+    "WalletBalance": 1200,
+    "Cart": {
+      "CustomerId": 3,
+      "Items": [],
+      "LastUpdated": "2026-03-09T14:04:42.7462023\u002B02:00",
+      "Total": 0,
+      "ItemCount": 0,
+      "IsEmpty": true
+    },
+    "OrderHistory": [],
+    "Reviews": [],
+    "Wishlist": [],
+    "Id": 3,
+    "Username": "jane_smith",
+    "Email": "jane@email.com",
+    "PasswordHash": "edf631e567d644446a6b3a47d3c50a579dc6f536496a960f9bc693566bb47727",
+    "FullName": "Jane Smith",
+    "RegisteredAt": "2026-03-09T14:04:42.7461694\u002B02:00",
+    "SecurityQuestion": "",
+    "SecurityAnswerHash": ""
+  },
+  {
+    "$type": "Administrator",
+    "Role": "Administrator",
+    "Department": "Sales",
+    "IsApproved": true,
+    "Id": 4,
+    "Username": "admin2",
+    "Email": "admin2@mail.com",
+    "PasswordHash": "adb673894a3af524e7d754d29312c19c01d980ed24cfd96cb5cea5fabf80ad9c",
+    "FullName": "Another Admin",
+    "RegisteredAt": "2026-03-09T14:07:41.6980157\u002B02:00",
+    "SecurityQuestion": "What street did you grow up on?",
+    "SecurityAnswerHash": "98a69f49d20af5455f41f960ade95d8383b653dce4b45ae8e8904a9c4f9023d0"
+  },
+  {
+    "$type": "Customer",
+    "Role": "Customer",
+    "WalletBalance": 19000.00,
+    "Cart": {
+      "CustomerId": 5,
+      "Items": [],
+      "LastUpdated": "2026-03-09T14:35:05.1402144\u002B02:00",
+      "Total": 0,
+      "ItemCount": 0,
+      "IsEmpty": true
+    },
+    "OrderHistory": [
+      {
+        "Id": 1,
+        "CustomerId": 5,
+        "CustomerName": "Kenna moreki",
+        "Items": [
+          {
+            "ProductId": 5,
+            "ProductName": "Yoga Mat",
+            "UnitPrice": 299.99,
+            "Quantity": 2,
+            "LineTotal": 599.98
+          }
+        ],
+        "Status": 4,
+        "TotalAmount": 599.98,
+        "PlacedAt": "2026-03-09T14:35:05.1293431\u002B02:00",
+        "LastUpdated": "2026-03-09T14:42:39.2056143\u002B02:00",
+        "CancelledAt": "2026-03-09T14:42:39.2056118\u002B02:00"
+      }
+    ],
+    "Reviews": [
+      {
+        "Id": 1,
+        "ProductId": 5,
+        "CustomerId": 5,
+        "CustomerName": "Kenna moreki",
+        "Rating": 3,
+        "Comment": "It is fair",
+        "CreatedAt": "2026-03-09T14:41:50.7394948\u002B02:00"
+      }
+    ],
+    "Wishlist": [
+      11
+    ],
+    "Id": 5,
+    "Username": "Kenna Moreki",
+    "Email": "moreki@mail.com",
+    "PasswordHash": "adb673894a3af524e7d754d29312c19c01d980ed24cfd96cb5cea5fabf80ad9c",
+    "FullName": "Kenna moreki",
+    "RegisteredAt": "2026-03-09T14:09:45.4178211\u002B02:00",
+    "SecurityQuestion": "What street did you grow up on?",
+    "SecurityAnswerHash": "98a69f49d20af5455f41f960ade95d8383b653dce4b45ae8e8904a9c4f9023d0"
+  }
+]
