@@ -1,6 +1,6 @@
 # Online Shopping System — C# Console Application
 
-![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Galane-dev/OnlineShoppingSystem-Console.git/actions/workflows/ci.yml/badge.svg)
 
 A fully-featured backend shopping system built in **.NET 10** as a C# console application. Demonstrates clean architecture, design patterns, LINQ, JSON persistence, and a complete CI pipeline.
 
@@ -27,7 +27,7 @@ Data is saved to a `data/` folder next to the executable on first run and loaded
 
 | Role          | Username    | Password   | Notes                        |
 |---------------|-------------|------------|------------------------------|
-| Administrator | `admin`     | `admin123` | Pre-approved, full access    |
+| Administrator | `admin`     | `M7y%Pasa` | Pre-approved, full access    |
 | Customer      | `john_doe`  | `pass123`  | R500 wallet balance          |
 | Customer      | `jane_smith`| `pass123`  | R1200 wallet balance         |
 
@@ -268,4 +268,4 @@ Each test class creates its own `TestFixture` (which spins up a temp directory) 
 4. **Build** in Release configuration
 5. **Run all tests** and upload results as a build artifact
 
-> Replace `YOUR_USERNAME/YOUR_REPO` in the badge URL at the top of this file with your actual GitHub repository path.
+
