@@ -141,10 +141,10 @@ public class DataStore
 
     // ── Password helpers ───────────────────────────────────────────────────────
 
-    /// <summary>Simple deterministic hash — suitable only for this simulation.</summary>
+    /// <summary>Delegates to PasswordHelper for SHA-256 hashing.</summary>
     public static string HashPassword(string password) =>
-        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password + "_salt"));
+        Application.Helpers.PasswordHelper.Hash(password);
 
     public static bool VerifyPassword(string password, string hash) =>
-        HashPassword(password) == hash;
+        Application.Helpers.PasswordHelper.Verify(password, hash);
 }

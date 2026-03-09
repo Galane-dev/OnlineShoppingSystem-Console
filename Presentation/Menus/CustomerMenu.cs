@@ -15,19 +15,25 @@ public class CustomerMenu
     private readonly OrderService   _orderService;
     private readonly PaymentService _paymentService;
     private readonly ReviewService  _reviewService;
+    private readonly AuthService    _authService;
+    private readonly WishlistService _wishlistService;
 
     public CustomerMenu(
-        ProductService productService,
-        CartService    cartService,
-        OrderService   orderService,
-        PaymentService paymentService,
-        ReviewService  reviewService)
+        ProductService  productService,
+        CartService     cartService,
+        OrderService    orderService,
+        PaymentService  paymentService,
+        ReviewService   reviewService,
+        AuthService     authService,
+        WishlistService wishlistService)
     {
-        _productService = productService;
-        _cartService    = cartService;
-        _orderService   = orderService;
-        _paymentService = paymentService;
-        _reviewService  = reviewService;
+        _productService  = productService;
+        _cartService     = cartService;
+        _orderService    = orderService;
+        _paymentService  = paymentService;
+        _reviewService   = reviewService;
+        _authService     = authService;
+        _wishlistService = wishlistService;
     }
 
     public void Run(Customer customer)
@@ -51,24 +57,30 @@ public class CustomerMenu
             ConsoleHelper.WriteMenuOption(7,  "Top Up Wallet",    "Add funds to your wallet");
             ConsoleHelper.WriteMenuOption(8,  "Order History",    "View all past orders");
             ConsoleHelper.WriteMenuOption(9,  "Track Order",      "Check the status of an order");
-            ConsoleHelper.WriteMenuOption(10, "Write a Review",   "Review a product you purchased");
+            ConsoleHelper.WriteMenuOption(10, "Write a Review",    "Review a delivered product");
+            ConsoleHelper.WriteMenuOption(11, "My Account",        "Edit name or change your password");
+            ConsoleHelper.WriteMenuOption(12, "Cancel / Return",   "Cancel or return an order");
+            ConsoleHelper.WriteMenuOption(13, "Wishlist",          "Save products for later");
             ConsoleHelper.WriteMenuOption(0,  "Logout");
             Console.WriteLine();
 
-            var choice = ConsoleHelper.ReadInt("Select option", 0, 10);
+            var choice = ConsoleHelper.ReadInt("Select option", 0, 13);
 
             switch (choice)
             {
-                case 1:  BrowseProducts(customer);   break;
-                case 2:  SearchProducts(customer);   break;
-                case 3:  ViewCart(customer);         break;
-                case 4:  UpdateCart(customer);       break;
-                case 5:  Checkout(customer);         break;
-                case 6:  ViewWallet(customer);       break;
-                case 7:  AddWalletFunds(customer);   break;
-                case 8:  ViewOrderHistory(customer); break;
-                case 9:  TrackOrder(customer);       break;
-                case 10: ReviewProduct(customer);    break;
+                case 1:  BrowseProducts(customer);      break;
+                case 2:  SearchProducts(customer);      break;
+                case 3:  ViewCart(customer);            break;
+                case 4:  UpdateCart(customer);          break;
+                case 5:  Checkout(customer);            break;
+                case 6:  ViewWallet(customer);          break;
+                case 7:  AddWalletFunds(customer);      break;
+                case 8:  ViewOrderHistory(customer);    break;
+                case 9:  TrackOrder(customer);          break;
+                case 10: ReviewProduct(customer);       break;
+                case 11: MyAccount(customer);           break;
+                case 12: CancelOrReturnOrder(customer); break;
+                case 13: ManageWishlist(customer);      break;
                 case 0:
                     ConsoleHelper.WriteInfo("You have been logged out.");
                     ConsoleHelper.PressEnterToContinue();
@@ -469,16 +481,18 @@ public class CustomerMenu
         Console.Clear();
         ConsoleHelper.WriteHeader("Write a Review");
 
-        var purchasedProducts = customer.OrderHistory
-            .Where(o => o.Status != OrderStatus.Cancelled)
+        // Only products from *delivered* orders are eligible
+        var eligibleProducts = customer.OrderHistory
+            .Where(o => o.Status == OrderStatus.Delivered)
             .SelectMany(o => o.Items)
             .Select(i => new { i.ProductId, i.ProductName })
             .DistinctBy(i => i.ProductId)
             .ToList();
 
-        if (!purchasedProducts.Any())
+        if (!eligibleProducts.Any())
         {
-            ConsoleHelper.WriteWarning("You have no eligible purchases to review.");
+            ConsoleHelper.WriteWarning("You have no eligible products to review.");
+            ConsoleHelper.WriteInfo("Reviews are only available once your order has been delivered.");
             ConsoleHelper.PressEnterToContinue();
             return;
         }
@@ -487,7 +501,7 @@ public class CustomerMenu
         Console.WriteLine($"  {"ID",4}  Product");
         ConsoleHelper.WriteDivider();
 
-        foreach (var p in purchasedProducts)
+        foreach (var p in eligibleProducts)
             Console.WriteLine($"  {p.ProductId,4}  {p.ProductName}");
 
         Console.WriteLine();
@@ -504,6 +518,365 @@ public class CustomerMenu
 
             _reviewService.SubmitReview(customer, productId, rating, comment);
             ConsoleHelper.WriteSuccess("Review submitted — thank you for your feedback!");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    // ── Cancel / Return ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Shows cancellable and returnable orders, lets the customer pick one,
+    /// then routes to the correct action based on its status.
+    /// </summary>
+    private void CancelOrReturnOrder(Customer customer)
+    {
+        Console.Clear();
+        ConsoleHelper.WriteHeader("Cancel / Return Order");
+
+        var actionableOrders = customer.OrderHistory
+            .Where(o => o.Status == OrderStatus.Pending   ||
+                        o.Status == OrderStatus.Processing ||
+                        o.Status == OrderStatus.Delivered)
+            .OrderByDescending(o => o.PlacedAt)
+            .ToList();
+
+        if (!actionableOrders.Any())
+        {
+            ConsoleHelper.WriteWarning("You have no orders available to cancel or return.");
+            ConsoleHelper.WriteInfo("  • Cancel: available for Pending or Processing orders.");
+            ConsoleHelper.WriteInfo("  • Return:  available for Delivered orders.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"  {"ID",4}  {"Date",-18}  {"Total",10}  {"Status",-12}  Action");
+        ConsoleHelper.WriteDivider();
+
+        foreach (var o in actionableOrders)
+        {
+            var action = o.Status == OrderStatus.Delivered ? "Return" : "Cancel";
+            Console.Write($"  {o.Id,4}  {o.PlacedAt:dd MMM yyyy HH:mm}  R{o.TotalAmount,8:F2}  ");
+            PrintStatusColored(o.Status);
+            Console.WriteLine($"  {action}");
+        }
+
+        Console.WriteLine();
+        var orderId = ConsoleHelper.ReadInt("Enter Order ID (0 to go back)", 0);
+        if (orderId == 0) return;
+
+        var order = actionableOrders.FirstOrDefault(o => o.Id == orderId);
+        if (order == null)
+        {
+            ConsoleHelper.WriteError("That order ID was not in the list above.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        if (order.Status == OrderStatus.Delivered)
+            ConfirmReturnOrder(customer, order);
+        else
+            ConfirmCancelOrder(customer, order);
+    }
+
+    private void ConfirmCancelOrder(Customer customer, Order order)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"  Order #{order.Id}  ·  R{order.TotalAmount:F2}  ·  Status: {order.Status}");
+        ConsoleHelper.WriteInfo($"  A full refund of R{order.TotalAmount:F2} will be returned to your wallet.");
+        Console.WriteLine();
+
+        var confirm = ConsoleHelper.ReadInput("Cancel this order? (yes/no)");
+        if (!confirm.Equals("yes", StringComparison.OrdinalIgnoreCase))
+        {
+            ConsoleHelper.WriteInfo("No changes made.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        try
+        {
+            _orderService.CancelOrder(customer, order.Id);
+            ConsoleHelper.WriteSuccess($"Order #{order.Id} cancelled. R{order.TotalAmount:F2} refunded to your wallet.");
+            ConsoleHelper.WriteInfo($"New wallet balance: R{customer.WalletBalance:F2}");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    private void ConfirmReturnOrder(Customer customer, Order order)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"  Order #{order.Id}  ·  R{order.TotalAmount:F2}  ·  Status: Delivered");
+        ConsoleHelper.WriteInfo($"  Returning this order will refund R{order.TotalAmount:F2} to your wallet.");
+        Console.WriteLine();
+
+        var confirm = ConsoleHelper.ReadInput("Return this order? (yes/no)");
+        if (!confirm.Equals("yes", StringComparison.OrdinalIgnoreCase))
+        {
+            ConsoleHelper.WriteInfo("No changes made.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        try
+        {
+            _orderService.ReturnOrder(customer, order.Id);
+            ConsoleHelper.WriteSuccess($"Order #{order.Id} returned. R{order.TotalAmount:F2} refunded to your wallet.");
+            ConsoleHelper.WriteInfo($"New wallet balance: R{customer.WalletBalance:F2}");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    // ── Wishlist ──────────────────────────────────────────────────────────────
+
+    private void ManageWishlist(Customer customer)
+    {
+        while (true)
+        {
+            Console.Clear();
+            ConsoleHelper.WriteHeader("My Wishlist");
+
+            var wishlist = _wishlistService.GetWishlist(customer);
+
+            if (!wishlist.Any())
+            {
+                ConsoleHelper.WriteWarning("Your wishlist is empty.");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine($"  {"ID",4}  {"Name",-28}  {"Price",10}  {"Stock",7}");
+                ConsoleHelper.WriteDivider();
+
+                foreach (var p in wishlist)
+                {
+                    Console.Write($"  {p.Id,4}  {p.Name,-28}  R{p.Price,8:F2}  ");
+                    Console.ForegroundColor = p.IsInStock ? ConsoleColor.Green : ConsoleColor.Red;
+                    Console.WriteLine(p.IsInStock ? $"{p.StockQuantity,7}" : "    OUT");
+                    Console.ResetColor();
+                }
+            }
+
+            Console.WriteLine();
+            ConsoleHelper.WriteMenuOption(1, "Add product to wishlist");
+            ConsoleHelper.WriteMenuOption(2, "Remove product from wishlist");
+            ConsoleHelper.WriteMenuOption(3, "Add wishlist item to cart");
+            ConsoleHelper.WriteMenuOption(0, "Back");
+            Console.WriteLine();
+
+            var choice = ConsoleHelper.ReadInt("Select option", 0, 3);
+            if (choice == 0) return;
+
+            switch (choice)
+            {
+                case 1: AddToWishlist(customer);              break;
+                case 2: RemoveFromWishlist(customer, wishlist); break;
+                case 3: AddWishlistItemToCart(customer, wishlist); break;
+            }
+        }
+    }
+
+    private void AddToWishlist(Customer customer)
+    {
+        Console.WriteLine();
+
+        // Show all products so the user can see IDs before entering one
+        var allProducts = _productService.GetAll();
+
+        if (!allProducts.Any())
+        {
+            ConsoleHelper.WriteWarning("No products are currently available.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        PrintProductTable(allProducts);
+        Console.WriteLine();
+
+        var productId = ConsoleHelper.ReadInt("Enter Product ID to add to wishlist (0 to cancel)", 0);
+        if (productId == 0) return;
+
+        try
+        {
+            _wishlistService.AddToWishlist(customer, productId);
+            ConsoleHelper.WriteSuccess("Product added to your wishlist.");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    private void RemoveFromWishlist(Customer customer, List<Product> wishlist)
+    {
+        if (!wishlist.Any())
+        {
+            ConsoleHelper.WriteWarning("Your wishlist is empty.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        Console.WriteLine();
+        var productId = ConsoleHelper.ReadInt("Enter Product ID to remove (0 to cancel)", 0);
+        if (productId == 0) return;
+
+        try
+        {
+            _wishlistService.RemoveFromWishlist(customer, productId);
+            ConsoleHelper.WriteSuccess("Product removed from your wishlist.");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    private void AddWishlistItemToCart(Customer customer, List<Product> wishlist)
+    {
+        var inStock = wishlist.Where(p => p.IsInStock).ToList();
+
+        if (!inStock.Any())
+        {
+            ConsoleHelper.WriteWarning("None of your wishlist items are currently in stock.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        Console.WriteLine();
+        var productId = ConsoleHelper.ReadInt("Enter Product ID to add to cart (0 to cancel)", 0);
+        if (productId == 0) return;
+
+        var product = inStock.FirstOrDefault(p => p.Id == productId);
+        if (product == null)
+        {
+            ConsoleHelper.WriteError("That product is not in your wishlist or is out of stock.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        var alreadyInCart = customer.Cart.Items.FirstOrDefault(i => i.ProductId == productId)?.Quantity ?? 0;
+        var maxAllowed    = product.StockQuantity - alreadyInCart;
+
+        ConsoleHelper.WriteInfo($"  {product.Name}  ·  R{product.Price:F2}  ·  Up to {maxAllowed} available");
+        var qty = ConsoleHelper.ReadInt($"Quantity (1–{maxAllowed})", 1, maxAllowed);
+
+        try
+        {
+            _cartService.AddToCart(customer, productId, qty);
+            ConsoleHelper.WriteSuccess($"{qty}x '{product.Name}' added to cart!");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    // ── My Account ────────────────────────────────────────────────────────────
+
+    /// <summary>Account settings sub-menu: edit name or change password.</summary>
+    private void MyAccount(Customer customer)
+    {
+        Console.Clear();
+        ConsoleHelper.WriteHeader("My Account");
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"  Username  : {customer.Username}");
+        ConsoleHelper.WriteInfo($"  Full Name : {customer.FullName}");
+        ConsoleHelper.WriteInfo($"  Email     : {customer.Email}");
+        Console.WriteLine();
+
+        ConsoleHelper.WriteMenuOption(1, "Edit Full Name",    "Update your display name");
+        ConsoleHelper.WriteMenuOption(2, "Change Password",   "Update your password securely");
+        ConsoleHelper.WriteMenuOption(0, "Back");
+        Console.WriteLine();
+
+        var choice = ConsoleHelper.ReadInt("Select option", 0, 2);
+
+        switch (choice)
+        {
+            case 1: EditFullName(customer);    break;
+            case 2: ChangePassword(customer);  break;
+        }
+    }
+
+    private void EditFullName(Customer customer)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo($"Current name: {customer.FullName}");
+        var newName = ConsoleHelper.ReadRequiredInput("New full name");
+
+        try
+        {
+            _authService.UpdateFullName(customer, newName);
+            ConsoleHelper.WriteSuccess($"Name updated to '{customer.FullName}'.");
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteError(ex.Message);
+        }
+
+        ConsoleHelper.PressEnterToContinue();
+    }
+
+    private void ChangePassword(Customer customer)
+    {
+        Console.WriteLine();
+        ConsoleHelper.WriteInfo("Password requirements: 6+ characters, uppercase, lowercase, number, symbol.");
+        Console.WriteLine();
+
+        var current = ConsoleHelper.ReadPassword("Current password");
+
+        // Verify current password before revealing the new-password prompt
+        if (!Application.Helpers.PasswordHelper.Verify(current, customer.PasswordHash))
+        {
+            ConsoleHelper.WriteError("Current password is incorrect.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        // Loop until a strong new password is entered
+        string newPassword;
+        while (true)
+        {
+            newPassword = ConsoleHelper.ReadPassword("New password");
+            var error = Application.Helpers.PasswordHelper.GetStrengthError(newPassword);
+            if (error == null) break;
+            ConsoleHelper.WriteWarning(error);
+        }
+
+        var confirm = ConsoleHelper.ReadPassword("Confirm new password");
+
+        if (newPassword != confirm)
+        {
+            ConsoleHelper.WriteError("Passwords do not match. No changes were saved.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        try
+        {
+            _authService.ChangePassword(customer, current, newPassword);
+            ConsoleHelper.WriteSuccess("Password changed successfully.");
         }
         catch (Exception ex)
         {

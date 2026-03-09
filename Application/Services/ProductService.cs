@@ -1,3 +1,4 @@
+using OnlineShoppingSystem.Application.Helpers;
 using OnlineShoppingSystem.Domain.Interfaces;
 using OnlineShoppingSystem.Domain.Models;
 using OnlineShoppingSystem.Infrastructure.Data;
@@ -27,16 +28,28 @@ public class ProductService : IProductService
             .ToList();
 
     /// <summary>
-    /// Searches products by name, description, or category — case-insensitive.
+    /// Searches active products by name and description using fuzzy matching.
+    /// Each field is scored independently and the higher score is taken,
+    /// so a strong name match always outranks a weak description match.
+    /// Results with a score of zero are excluded. Results are returned
+    /// highest-score first so the most relevant items appear at the top.
     /// </summary>
-    public List<Product> Search(string query) =>
-        _store.Products
-            .Where(p => p.IsActive &&
-                (p.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                 p.Description.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                 p.Category.Contains(query, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(p => p.Name)
+    public List<Product> Search(string query)
+    {
+        return _store.Products
+            .Where(p => p.IsActive)
+            .Select(p => new
+            {
+                Product = p,
+                Score   = Math.Max(
+                    FuzzyMatcher.Score(p.Name,        query),
+                    FuzzyMatcher.Score(p.Description, query))
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .Select(x => x.Product)
             .ToList();
+    }
 
     public List<Product> GetByCategory(string category) =>
         _store.Products

@@ -38,6 +38,7 @@ public class Order
     public decimal TotalAmount { get; set; }
     public DateTime PlacedAt { get; set; } = DateTime.Now;
     public DateTime? LastUpdated { get; set; }
+    public DateTime? CancelledAt { get; set; }
 
     public override string ToString() =>
         $"Order #{Id} | {CustomerName} | R{TotalAmount:F2} | {Status} | {PlacedAt:dd MMM yyyy HH:mm}";

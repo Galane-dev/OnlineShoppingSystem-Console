@@ -66,6 +66,63 @@ public static class ConsoleHelper
     }
 
     /// <summary>
+    /// Reads a password from the console, echoing '*' for every character typed.
+    /// Supports Backspace to delete the last character.
+    /// </summary>
+    public static string ReadPassword(string prompt = "Password")
+    {
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write($"  {prompt}: ");
+        Console.ResetColor();
+
+        var password = new System.Text.StringBuilder();
+
+        while (true)
+        {
+            var key = Console.ReadKey(intercept: true);
+
+            if (key.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                break;
+            }
+
+            if (key.Key == ConsoleKey.Backspace)
+            {
+                if (password.Length > 0)
+                {
+                    password.Remove(password.Length - 1, 1);
+                    // Erase the last asterisk from the console
+                    Console.Write("\b \b");
+                }
+                continue;
+            }
+
+            // Ignore other control keys (arrows, function keys, etc.)
+            if (char.IsControl(key.KeyChar)) continue;
+
+            password.Append(key.KeyChar);
+            Console.Write('*');
+        }
+
+        return password.ToString();
+    }
+
+    /// <summary>
+    /// Prompts for a password using masked input and validates it is non-empty.
+    /// Loops until the user types something.
+    /// </summary>
+    public static string ReadRequiredPassword(string prompt = "Password")
+    {
+        while (true)
+        {
+            var value = ReadPassword(prompt);
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+            WriteWarning("Password cannot be empty.");
+        }
+    }
+
+    /// <summary>
     /// Prompts the user for input and validates it is non-empty.
     /// Loops until a valid value is entered.
     /// </summary>

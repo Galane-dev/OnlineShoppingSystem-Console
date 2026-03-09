@@ -34,6 +34,20 @@ public interface IOrderService
     List<Order> GetAllOrders();
     List<Order> GetOrdersByCustomer(int customerId);
     void UpdateStatus(int orderId, OrderStatus status);
+
+    /// <summary>Cancels a Pending or Processing order and refunds the customer's wallet.</summary>
+    void CancelOrder(Customer customer, int orderId);
+
+    /// <summary>Returns a Delivered order, restocks items, and refunds the customer's wallet.</summary>
+    void ReturnOrder(Customer customer, int orderId);
+}
+
+/// <summary>Defines wishlist management operations.</summary>
+public interface IWishlistService
+{
+    void AddToWishlist(Customer customer, int productId);
+    void RemoveFromWishlist(Customer customer, int productId);
+    List<Product> GetWishlist(Customer customer);
 }
 
 /// <summary>Defines wallet and payment processing operations.</summary>
@@ -44,12 +58,34 @@ public interface IPaymentService
     List<Payment> GetPaymentHistory(int customerId);
 }
 
-/// <summary>Defines user authentication and registration operations.</summary>
+/// <summary>Defines user authentication, registration, and account management operations.</summary>
 public interface IAuthService
 {
     User? Login(string username, string password);
-    Customer RegisterCustomer(string username, string email, string password, string fullName);
+
+    /// <summary>Registers a new customer, storing a hashed security answer for password reset.</summary>
+    Customer RegisterCustomer(string username, string email, string password, string fullName,
+                              string securityQuestion, string securityAnswer);
+
     bool UsernameExists(string username);
+
+    /// <summary>Returns the User with the given username, or null if not found.</summary>
+    User? FindByUsername(string username);
+
+    /// <summary>Updates the user's display name.</summary>
+    void UpdateFullName(User user, string newFullName);
+
+    /// <summary>
+    /// Changes the user's password after verifying the current one.
+    /// Throws if currentPassword does not match or newPassword fails strength rules.
+    /// </summary>
+    void ChangePassword(User user, string currentPassword, string newPassword);
+
+    /// <summary>
+    /// Resets the password for the given username after verifying the security answer.
+    /// Throws if the username is not found, the answer is wrong, or the new password is weak.
+    /// </summary>
+    void ResetPassword(string username, string securityAnswer, string newPassword);
 }
 
 /// <summary>Defines reporting and analytics operations for administrators.</summary>
