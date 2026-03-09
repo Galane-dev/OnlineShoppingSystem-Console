@@ -79,7 +79,7 @@ public class DataStore
             Id           = NextUserId(),
             Username     = "admin",
             Email        = "admin@shop.com",
-            PasswordHash = HashPassword("admin123"),
+            PasswordHash = HashPassword("M7y%Padq"),
             FullName     = "System Administrator",
             Department   = "Operations"
         });
