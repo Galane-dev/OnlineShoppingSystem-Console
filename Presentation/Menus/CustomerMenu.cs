@@ -694,7 +694,21 @@ public class CustomerMenu
     private void AddToWishlist(Customer customer)
     {
         Console.WriteLine();
-        var productId = ConsoleHelper.ReadInt("Enter Product ID to add (0 to cancel)", 0);
+
+        // Show all products so the user can see IDs before entering one
+        var allProducts = _productService.GetAll();
+
+        if (!allProducts.Any())
+        {
+            ConsoleHelper.WriteWarning("No products are currently available.");
+            ConsoleHelper.PressEnterToContinue();
+            return;
+        }
+
+        PrintProductTable(allProducts);
+        Console.WriteLine();
+
+        var productId = ConsoleHelper.ReadInt("Enter Product ID to add to wishlist (0 to cancel)", 0);
         if (productId == 0) return;
 
         try
