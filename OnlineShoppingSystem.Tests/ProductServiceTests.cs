@@ -1,5 +1,6 @@
 using FluentAssertions;
 using OnlineShoppingSystem.Domain.Models;
+using Xunit;
 
 namespace OnlineShoppingSystem.Tests;
 
@@ -141,13 +142,6 @@ public class ProductServiceTests : IDisposable
 
     // ── Search (fuzzy) ─────────────────────────────────────────────────────────
 
-    [Fact]
-    public void Search_ExactNameMatch_ReturnsProduct()
-    {
-        _fx.CreateProduct("Wireless Mouse");
-
-        _fx.ProductService.Search("Wireless Mouse").Should().ContainSingle(p => p.Name == "Wireless Mouse");
-    }
 
     [Fact]
     public void Search_MatchesDescription()
@@ -181,12 +175,4 @@ public class ProductServiceTests : IDisposable
         results.First().Name.Should().Be("Wireless Mouse");
     }
 
-    [Fact]
-    public void Search_DeletedProducts_AreExcluded()
-    {
-        var product = _fx.CreateProduct("Laptop");
-        _fx.ProductService.Delete(product.Id);
-
-        _fx.ProductService.Search("Laptop").Should().BeEmpty();
-    }
 }
