@@ -1,6 +1,7 @@
 using FluentAssertions;
 using OnlineShoppingSystem.Application.Helpers;
 using OnlineShoppingSystem.Domain.Models;
+using Xunit;
 
 namespace OnlineShoppingSystem.Tests;
 
